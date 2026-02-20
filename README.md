@@ -1,6 +1,6 @@
 # Multi-Sensor-Active-Tracking-System
 
-MSATS — Multi-Subject Automated Targeting System
+MSATS — Multi-Sensor Active Tracking System
 
 A vision-guided classification and response system that detects colored geometric targets using OpenCV and executes different actions via Arduino-controlled actuators.
 The system performs real-time object segmentation, contour analysis, and shape recognition to distinguish civilians from hostile targets and applies rule-based decision logic.
