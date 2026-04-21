@@ -15,3 +15,5 @@ Decision engine (armed / unarmed / ignore)
 
 Hardware control interface for servo-based actuation
 
+Contributions:
+tanmay-r (3D Modeling, Hardware Testing, Prototying) 
