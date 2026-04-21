@@ -10,20 +10,20 @@ last_trigger_time = 0
 NUM_SENSORS = 4
 last_valid = [None] * NUM_SENSORS
 confidence = [0] * NUM_SENSORS
-threshold_dist = 30#cm
+threshold_dist = 15#cm
 max_conf = 7
 ser = serial.Serial("COM8", 9600, timeout=1)
-
 distances = [0,0,0,0]
 
 sensor_angles = {
-    0: 45,
-    1: 90,
-    2: 135,
+    0: 0,
+    1: 60,
+    2: 120,
     3: 180
 }
 
 pygame.init()
+font = pygame.font.SysFont("Arial", 18)
 WIDTH, HEIGHT = 600, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Radar")
@@ -32,12 +32,11 @@ max_radius = 250
 running = True
 
 while running:
-    # -------- 1. EVENTS --------
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    # -------- 2. SERIAL INPUT --------
+    #SERIAL INPUT
     if ser.in_waiting:
         line = ser.readline().decode(errors='ignore').strip()
 
@@ -60,7 +59,7 @@ while running:
 
                 distances[idx] = dist
 
-                # -------- 3. LOGIC --------
+                #DISTANCE LOGIC
                 if dist < threshold_dist:
                     confidence[idx] += 1
                 else:
@@ -89,17 +88,18 @@ while running:
         except:
             pass
 
-    # -------- REARM --------
+    #Rearming the System
     if not armed:
         if all(d is None or d > threshold_dist for d in distances):
             print("REARMED")
             armed = True
 
-    # -------- 4. DRAW RADAR --------
+    #Radar Logic
     screen.fill((0, 0, 0))
 
     for r in range(50, max_radius + 1, 50):
-        pygame.draw.circle(screen, (0, 100, 0), center, r, 1)
+        rect = pygame.Rect(center[0] - r, center[1] - r, 2*r, 2*r)
+        pygame.draw.arc(screen, (0, 100, 0), rect, 0, math.pi, 1)
 
     pygame.draw.circle(screen, (0, 255, 0), center, 5)
 
@@ -117,5 +117,25 @@ while running:
 
         pygame.draw.line(screen, (0, 255, 0), center, (x, y), 1)
         pygame.draw.circle(screen, (255, 0, 0), (int(x), int(y)), 5)
+
+        table_y = HEIGHT - 180
+
+        table_width = 3 * 150
+        start_x = (WIDTH - table_width) // 2
+
+        headers = ["Sensor", "Distance", "Confidence"]
+        for i, text in enumerate(headers):
+            label = font.render(text, True, (0, 255, 0))
+            screen.blit(label, (start_x + i*150, table_y))
+
+        for i in range(NUM_SENSORS):
+            d = distances[i] if distances[i] is not None else "-"
+            c = confidence[i]
+
+            row = [str(i), str(round(d, 2)) if d != "-" else "-", str(c)]
+
+            for j, val in enumerate(row):
+                label = font.render(val, True, (255, 255, 255))
+                screen.blit(label, (start_x + j*150, table_y + 30 + i*25))
 
     pygame.display.flip()
