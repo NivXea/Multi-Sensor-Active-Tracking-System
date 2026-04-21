@@ -15,4 +15,3 @@ Decision engine (armed / unarmed / ignore)
 
 Hardware control interface for servo-based actuation
 
-Demo datasets, calibration tests, and failure cases
