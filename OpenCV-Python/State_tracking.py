@@ -10,7 +10,7 @@ last_trigger_time = 0
 NUM_SENSORS = 4
 last_valid = [None] * NUM_SENSORS
 confidence = [0] * NUM_SENSORS
-threshold_dist = 15#cm
+threshold_dist = 30#cm
 max_conf = 7
 ser = serial.Serial("COM8", 9600, timeout=1)
 distances = [0,0,0,0]
