@@ -36,9 +36,11 @@ void setup() {
     pinMode(echoPins[i], INPUT);
   }
 
-  //Pan-tilt Pins
+  //Pan-tilt 
   servoX.attach(11);  
   servoY.attach(12); 
+  servoX.write(99);
+  servoY.write(88);
 
   //Laser
   pinMode(13 , OUTPUT);
@@ -67,10 +69,10 @@ void handleSerial() {
 
       if (sscanf(inputBuffer.c_str(), "T,%d,%d", &x, &y) == 2) {
         if (currentMode == TRACK) {
-          x = constrain(x, 50, 130);
-          y = constrain(y, 50, 130);
+          x = constrain(x, 80, 120);
+          y = constrain(y, 70, 110);
 
-          static int prevX = 90, prevY = 90;
+          static int prevX = 99, prevY = 88;
           x = 0.7 * prevX + 0.3 * x;
           y = 0.7 * prevY + 0.3 * y;
 
