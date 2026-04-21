@@ -4,16 +4,17 @@ import time
 
 
 def track(ser):
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     inac_time = time.time()  #Target Timeout
     last_sent = 0  #Serial Timeout
 
    
 
     #Sending Mean Position Angles beforehand
-    servo_x = 90
-    servo_y = 90
-    ser.write(b"T,90,90\n") 
+    servo_x = 99
+    servo_y = 88
+    ser.write(b"T,99,88\n") 
+    prev_x , prev_y = 99,88
 
     while True:
         ret, frame = cap.read()
@@ -28,37 +29,36 @@ def track(ser):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         colors = {
-            "green": [((40, 70, 70), (80, 255, 255))],
-            "magenta": [((140, 80, 80), (170, 255, 255))]
-        }
+    "red_low": [((0, 90, 90), (12, 255, 255))],
+    "red_high": [((165, 90, 90), (180, 255, 255))],
+}
 
         largest = None
         max_area = 0
 
+        full_mask = None
+
         for ranges in colors.values():
-
-            color_mask = None
-
             for (lower, upper) in ranges:
                 lower = np.array(lower)
                 upper = np.array(upper)
 
                 partial = cv2.inRange(hsv, lower, upper)
-                if color_mask is None:
-                    color_mask = partial
-                else:
-                    color_mask = cv2.bitwise_or(color_mask, partial)
 
-            contours, _ = cv2.findContours(color_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if full_mask is None:
+                    full_mask = partial
+                else:
+                    full_mask = cv2.bitwise_or(full_mask, partial)
+
+            contours, _ = cv2.findContours(full_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
             for cnt in contours:
                 area = cv2.contourArea(cnt)
-                if area < 2000:
+                if area < 1500:
                     continue
                 if area > max_area:
                     max_area = area
                     largest = cnt
-
         #Tracking The Target
         if largest is not None:
             inac_time = time.time()
@@ -84,37 +84,30 @@ def track(ser):
                     cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
 
                     #Sending Serial Input for Servo
-                    if time.time() - last_sent > 0.05:
-                        error_x = cx - frame_w // 2
-                        error_y = cy - frame_h // 2
+                    if time.time() - last_sent > 0.02:
+                        norm_x = (cx - frame_w // 2) / (frame_w // 2)
+                        norm_y = (cy - frame_h // 2) / (frame_h // 2)
 
-                        # simple proportional control
-                        kp = 0.05
+                        servo_x = int(100 - norm_x * 20)
+                        servo_y = int(90 + norm_y * 15)
 
-                        #Adding A Deadzone to reduce Jitter
-                        dead_zone = 20
-                        if abs(error_x) > dead_zone:
-                            servo_x -= int(kp * error_x)
+                        # clamp safety
+                        servo_x = max(80, min(120, servo_x))
+                        servo_y = max(75, min(105, servo_y))
 
-                        if abs(error_y) > dead_zone:
-                            servo_y += int(kp * error_y)
-
-                        # clamp angles
-                        servo_x = int((cx / frame_w) * 180)
-                        servo_y = int((cy / frame_h) * 180)
+                        # optional smoothing (only if needed)
+                        # servo_x = int(0.7 * prev_x + 0.3 * servo_x)
+                        # servo_y = int(0.7 * prev_y + 0.3 * servo_y)
 
                         prev_x, prev_y = servo_x, servo_y
 
-                        #Smoothing
-                        alpha = 0.2
-                        servo_x = int((1 - alpha) * prev_x + alpha * servo_x)
-                        servo_y = int((1 - alpha) * prev_y + alpha * servo_y)
-
                         ser.write(f"T,{servo_x},{servo_y}\n".encode())
+                        print(f"X: {servo_x} , Y: {servo_y}")
+
                         last_sent = time.time()
 
         else:
-            if time.time() - inac_time > 5:
+            if time.time() - inac_time > 3:
                 cv2.putText(
                     frame,
                     "TARGET LOST",
