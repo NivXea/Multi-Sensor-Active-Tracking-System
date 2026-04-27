@@ -7,14 +7,13 @@ def track(ser):
     cap = cv2.VideoCapture(1)
     inac_time = time.time()  #Target Timeout
     last_sent = 0  #Serial Timeout
-
-   
+    cooldown_time = 5
 
     #Sending Mean Position Angles beforehand
-    servo_x = 99
-    servo_y = 88
+    servo_x = 94
+    servo_y = 80
     ser.write(b"T,99,88\n") 
-    prev_x , prev_y = 99,88
+    prev_x , prev_y = 94,80
 
     while True:
         ret, frame = cap.read()
@@ -88,12 +87,12 @@ def track(ser):
                         norm_x = (cx - frame_w // 2) / (frame_w // 2)
                         norm_y = (cy - frame_h // 2) / (frame_h // 2)
 
-                        servo_x = int(100 - norm_x * 20)
-                        servo_y = int(90 + norm_y * 15)
+                        servo_x = int(95 - norm_x * 25)
+                        servo_y = int(80 + norm_y * 15)
 
                         # clamp safety
-                        servo_x = max(80, min(120, servo_x))
-                        servo_y = max(75, min(105, servo_y))
+                        servo_x = max(70, min(120, servo_x))
+                        servo_y = max(70, min(95, servo_y))
 
                         # optional smoothing (only if needed)
                         # servo_x = int(0.7 * prev_x + 0.3 * servo_x)
@@ -102,12 +101,12 @@ def track(ser):
                         prev_x, prev_y = servo_x, servo_y
 
                         ser.write(f"T,{servo_x},{servo_y}\n".encode())
-                        print(f"X: {servo_x} , Y: {servo_y}")
+                        #print(f"X: {servo_x} , Y: {servo_y}")
 
                         last_sent = time.time()
 
         else:
-            if time.time() - inac_time > 3:
+            if time.time() - inac_time > cooldown_time:
                 cv2.putText(
                     frame,
                     "TARGET LOST",
