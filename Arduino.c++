@@ -39,8 +39,8 @@ void setup() {
   //Pan-tilt 
   servoX.attach(11);  
   servoY.attach(12); 
-  servoX.write(99);
-  servoY.write(88);
+  servoX.write(94);
+  servoY.write(80);
 
   //Laser
   pinMode(13 , OUTPUT);
@@ -69,10 +69,10 @@ void handleSerial() {
 
       if (sscanf(inputBuffer.c_str(), "T,%d,%d", &x, &y) == 2) {
         if (currentMode == TRACK) {
-          x = constrain(x, 80, 120);
-          y = constrain(y, 70, 110);
+          x = constrain(x, 70, 120);
+          y = constrain(y, 70, 95);
 
-          static int prevX = 99, prevY = 88;
+          static int prevX = 94, prevY = 80;
           x = 0.7 * prevX + 0.3 * x;
           y = 0.7 * prevY + 0.3 * y;
 
@@ -107,7 +107,7 @@ void loop() {
       Serial.println(d);
     }
 
-    delay(50); // ~50 Hz
+    delay(20); // ~50 Hz
   }
   // TRACK mode does NOT send distance for now
 }
